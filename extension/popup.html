@@ -1,0 +1,11 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="popup.css"><title>AI Job Parser</title></head>
+<body>
+  <main>
+    <h1>AI Job Parser</h1><p id="status" role="status">Ready to extract this page.</p>
+    <section id="result" hidden></section>
+    <div class="actions"><button id="extract">Extract</button><button id="copy" disabled>Copy JSON</button><button id="download" disabled>Download</button><button id="send" disabled>Send</button></div>
+    <details><summary>Settings</summary><label>Backend URL<input id="backendUrl" type="url" placeholder="http://localhost:3000"></label><label>Teammate endpoint <input id="teammateUrl" type="url" placeholder="https://example.com/jobs"></label><button id="save" class="secondary">Save settings</button></details>
+  </main><script src="popup.js"></script>
+</body></html>
+

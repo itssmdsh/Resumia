@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "AI Job Parser",
+  "version": "1.0.0",
+  "description": "Extract structured job data from career pages.",
+  "action": { "default_popup": "popup.html", "default_title": "AI Job Parser" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["storage", "tabs", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["vendor/Readability.js", "content.js"], "run_at": "document_idle" }]
+}
