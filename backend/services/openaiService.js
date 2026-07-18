@@ -7,7 +7,8 @@ function responseText(response) { return response.output_text || response.output
 function configuredKey(value) { return Boolean(value && value.trim() && value.trim() !== 'replace_me'); }
 function maxOutputTokens() { const configured = Number(process.env.AI_MAX_TOKENS || 1200); return Number.isInteger(configured) && configured >= 256 && configured <= 16000 ? configured : 1200; }
 function openRouterKeys() {
-  const values = [process.env.OPENROUTER_API_KEY, ...Array.from({ length: 10 }, (_, index) => process.env[`OPENROUTER_API_KEY_${index + 1}`]), process.env.OPENAI_API_KEY?.startsWith('sk-or-') ? process.env.OPENAI_API_KEY : null];
+  const keyList = (process.env.OPENROUTER_API_KEYS || '').split(/[\r\n,]+/).map((key) => key.trim());
+  const values = [process.env.OPENROUTER_API_KEY, ...keyList, ...Array.from({ length: 20 }, (_, index) => process.env[`OPENROUTER_API_KEY_${index + 1}`]), process.env.OPENAI_API_KEY?.startsWith('sk-or-') ? process.env.OPENAI_API_KEY : null];
   return [...new Set(values.filter(configuredKey))];
 }
 function modelName() { const configured = process.env.OPENROUTER_MODEL || process.env.OPENAI_MODEL || 'openai/gpt-4.1-mini'; return configured.includes('/') || configured.startsWith('~') ? configured : `openai/${configured}`; }
