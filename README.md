@@ -22,7 +22,7 @@ For production, serve the API over HTTPS and set `ALLOWED_EXTENSION_ORIGINS` to 
 
 ## Daily apply-link parsing worker
 
-Run [`003_create_parsed_job_details.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/003_create_parsed_job_details.sql) after the two existing `job-link-automation` migrations in Supabase SQL Editor. The worker reads only rows where `job_apply_links.apply_url` exists and extraction succeeded, then writes one record per link to `parsed_job_details`.
+Run [`003_create_parsed_job_details.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/003_create_parsed_job_details.sql), then [`004_backfill_completed_parsing.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/004_backfill_completed_parsing.sql), after the two existing `job-link-automation` migrations in Supabase SQL Editor. The worker reads only successful `job_apply_links.apply_url` values that do not already have a `parsed_job_details` record, so completed links are never parsed twice.
 
 The [`scrape.yml`](C:/Users/hones/Documents/WebScraper/.github/workflows/scrape.yml) workflow runs daily at 09:00 UTC, processes at most 50 pending application links with three workers, uses HTTP extraction before Playwright, starts the AI parser locally on the GitHub runner, and writes company, location, comma-separated skills, and the full JSON. Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and one or more `OPENROUTER_API_KEY`, `OPENROUTER_API_KEY_1`, `OPENROUTER_API_KEY_2`, or `OPENROUTER_API_KEY_3` secrets before enabling it.
 
