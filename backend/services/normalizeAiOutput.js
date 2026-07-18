@@ -1,5 +1,12 @@
 function object(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
-function text(value) { return value === undefined || value === null || value === '' ? null : String(value).trim() || null; }
+function text(value) {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value === 'object') {
+    const entry = object(value);
+    return text(entry.display || entry.text || entry.name || entry.value || entry.title || entry.description);
+  }
+  return String(value).trim() || null;
+}
 function confidence(value) { const number = Number(value); return Number.isFinite(number) ? Math.max(0, Math.min(100, Math.round(number))) : null; }
 function boolean(value) { return typeof value === 'boolean' ? value : null; }
 function list(value) { return Array.isArray(value) ? value : value ? [value] : []; }
@@ -24,9 +31,13 @@ function textItems(value) {
   }).filter(Boolean);
 }
 function experience(value) {
-  const entry = object(value); const display = text(entry.display || entry.value || value);
-  const years = display?.match(/(\d+(?:\.\d+)?)\s*(?:-|to)?\s*(\d+(?:\.\d+)?)?\s*years?/i);
-  return { display, minYears: Number.isFinite(Number(entry.minYears)) ? Number(entry.minYears) : years ? Number(years[1]) : null, maxYears: Number.isFinite(Number(entry.maxYears)) ? Number(entry.maxYears) : years ? Number(years[2] || years[1]) : null, confidence: confidence(entry.confidence) };
+  const entry = object(value);
+  const suppliedDisplay = text(entry.display || entry.value || (typeof value === 'string' ? value : null));
+  const years = suppliedDisplay?.match(/(\d+(?:\.\d+)?)\s*(?:-|to)?\s*(\d+(?:\.\d+)?)?\s*years?/i);
+  const minYears = Number.isFinite(Number(entry.minYears)) ? Number(entry.minYears) : years ? Number(years[1]) : null;
+  const maxYears = Number.isFinite(Number(entry.maxYears)) ? Number(entry.maxYears) : years ? Number(years[2] || years[1]) : null;
+  const display = suppliedDisplay || (minYears !== null ? `${minYears}${maxYears !== null && maxYears !== minYears ? `-${maxYears}` : ''} years` : null);
+  return { display, minYears, maxYears, confidence: confidence(entry.confidence) };
 }
 
 export function normalizeAiOutput(raw, payload) {
