@@ -3,7 +3,11 @@ import { cleanText, confidence, NOISE } from './cleaner.js';
 
 export async function extractByHttp(url, threshold) {
   const response = await fetch(url, { headers: { 'User-Agent': 'AI-Job-Parser-Worker/1.0 (+https://github.com/itssmdsh/Resumia)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(30000) });
-  if (!response.ok) throw new Error(`HTTP extraction received ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(`HTTP extraction received ${response.status}`);
+    error.httpStatus = response.status;
+    throw error;
+  }
   const html = await response.text();
   const $ = cheerio.load(html);
   $('script,style,noscript,svg,canvas,iframe,header,footer,nav,aside,form,dialog').remove();

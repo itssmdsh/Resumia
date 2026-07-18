@@ -8,6 +8,8 @@ export async function extractJob(req, res) {
   } catch (error) {
     console.error('Extraction failed:', error.message);
     const status = /configured/.test(error.message) ? 503 : 502;
-    res.status(status).json({ success: false, error: status === 503 ? 'AI service is not configured' : 'Unable to parse this job posting' });
+    const body = { success: false, error: status === 503 ? 'AI service is not configured' : 'Unable to parse this job posting' };
+    if (process.env.PARSER_AUDIT_MODE === 'true') body.debug = { rawAiResponse: error.rawAiResponse || null, providerStatus: error.cause?.status || error.status || null };
+    res.status(status).json(body);
   }
 }

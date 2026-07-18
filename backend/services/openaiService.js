@@ -41,15 +41,19 @@ async function parseWithOpenAI(payload, correction) {
 export async function parseJob(payload) {
   const keys = openRouterKeys();
   if (!keys.length && !configuredKey(process.env.OPENAI_API_KEY)) throw new Error('Set an OpenRouter or OpenAI API key');
-  let correction = ''; let lastError;
+  let correction = ''; let lastError; let lastRawResponse = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const content = keys.length ? await completeWithOpenRouter(payload, correction, keys) : await parseWithOpenAI(payload, correction);
+      lastRawResponse = content;
       return jobSchema.parse(normalizeAiOutput(parseJson(content), payload));
     } catch (error) {
       lastError = error;
       correction = '\n\nYour prior output could not be parsed. Return one complete JSON object only; include every required top-level field and use [] or null for unavailable fields.';
     }
   }
-  throw new Error(`Model returned invalid job JSON: ${lastError?.message || 'unknown error'}`);
+  const error = new Error(`Model returned invalid job JSON: ${lastError?.message || 'unknown error'}`);
+  error.rawAiResponse = lastRawResponse;
+  error.cause = lastError;
+  throw error;
 }

@@ -20,6 +20,7 @@ jobs:
       OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4.1-mini' }}
       AI_MAX_TOKENS: '1200'
+      PARSER_AUDIT_MODE: 'true'
       WORKER_BATCH_LIMIT: ${{ vars.WORKER_BATCH_LIMIT || '50' }}
       WORKER_CONCURRENCY: ${{ vars.WORKER_CONCURRENCY || '3' }}
       HTTP_CONFIDENCE_THRESHOLD: '7'
