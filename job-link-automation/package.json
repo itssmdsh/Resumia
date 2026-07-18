@@ -1,0 +1,15 @@
+{
+  "name": "resumia-job-link-automation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/index.js",
+    "enqueue": "node --env-file-if-exists=.env src/enqueue.js",
+    "check": "node --check src/index.js && node --check src/enqueue.js && node --check src/config.js && node --check src/extractApplyUrl.js && node --check src/supabaseQueue.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

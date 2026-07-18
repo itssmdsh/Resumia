@@ -1,0 +1,41 @@
+name: Extract job apply links
+
+on:
+  schedule:
+    # 03:30 UTC is 09:00 Asia/Kolkata (IST does not use daylight saving time).
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: job-link-automation
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: job-link-automation
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      BATCH_SIZE: "50"
+      REQUEST_TIMEOUT_MS: "20000"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Extract pending Apply URLs
+        run: npm start
