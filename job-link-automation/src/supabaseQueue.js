@@ -23,7 +23,7 @@ async function supabaseRequest(config, path, options = {}) {
 export async function getPendingJobs(config) {
   const query = new URLSearchParams({
     select: 'id,source_url',
-    extraction_status: 'eq.pending',
+    extraction_status: 'in.(pending,failed)',
     order: 'created_at.asc',
     limit: String(config.batchSize),
   });
@@ -49,6 +49,7 @@ export async function updateJob(config, id, values) {
 export async function enqueueJobs(config, sourceUrls) {
   const rows = sourceUrls.map((sourceUrl) => ({
     source_url: sourceUrl,
+    apply_url: null,
     extraction_status: 'pending',
     error_message: null,
   }));
@@ -60,5 +61,18 @@ export async function enqueueJobs(config, sourceUrls) {
       prefer: 'resolution=merge-duplicates,return=minimal',
     },
     body: JSON.stringify(rows),
+  });
+}
+
+export async function enqueueNewJobs(config, sourceUrls) {
+  if (!sourceUrls.length) return;
+
+  await supabaseRequest(config, 'job_apply_links?on_conflict=source_url', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      prefer: 'resolution=ignore-duplicates,return=minimal',
+    },
+    body: JSON.stringify(sourceUrls.map((sourceUrl) => ({ source_url: sourceUrl }))),
   });
 }

@@ -2,7 +2,8 @@
 
 This folder is reserved for the automated workflow that:
 
-1. receives or reads third-party job-posting URLs;
+1. discovers third-party job-posting URLs from configured websites, YouTube
+   channels, and public Telegram channels;
 2. opens each job page and extracts the final **Apply** URL only;
 3. stores the result in Supabase;
 4. runs automatically every day at 09:00 Asia/Kolkata.
@@ -54,25 +55,40 @@ publicly.
 - Failures should be recorded without deleting a previously discovered apply URL.
 - The scheduler should invoke the idempotent `npm start` command once per day.
 
-## Queue usage
+## Automatic discovery and queue usage
 
-Insert an incoming third-party link into `public.job_apply_links` and supply only
-its `source_url`. The database default marks it as `pending`. Each automation run
-selects pending rows, extracts and resolves the final Apply URL, and updates the
-same row to `success` or `failed`.
+Each run first scrapes `DISCOVERY_SOURCES`. The default GitHub workflow sources
+are the three configured YouTube channels, Jobcode, and the three configured
+public Telegram channels. Newly discovered URLs are inserted into
+`public.job_apply_links` as `pending`; existing rows are left unchanged so
+successful jobs are not processed repeatedly. The run then extracts and resolves
+the final Apply URL and updates each new row to `success` or `failed`. Failed rows
+are retried on later daily runs so temporary network or source-site errors can
+recover automatically.
+
+`DISCOVERY_SOURCES` accepts comma-separated or newline-separated website URLs,
+YouTube channel URLs/handles, and public Telegram channel URLs. You can override
+the default in GitHub under **Settings → Secrets and variables → Actions →
+Variables**. `DISCOVERY_TIMEFRAME` defaults to `24h` for YouTube and Telegram
+posts. Generic website discovery scans the configured page on every run.
+
+Links can still be added manually by inserting only `source_url`, or with:
+
+```sh
+npm run enqueue -- https://jobcode.in/example-job/
+```
 
 ## Run locally
 
 From this folder:
 
 ```sh
+npm install
 npm test
-npm run enqueue -- https://jobcode.in/example-job/
 npm start
 ```
 
-This requires Node.js 20.6 or newer. It uses the built-in Fetch API and has no
-third-party runtime dependencies.
+This requires Node.js 20.6 or newer.
 
 ## Daily schedule
 

@@ -1,11 +1,21 @@
 import { getConfig } from './config.js';
+import { runScraper } from './discoveryScraper.js';
 import { extractApplyUrl, fetchHtml, resolveRedirects } from './extractApplyUrl.js';
-import { getPendingJobs, updateJob } from './supabaseQueue.js';
+import { enqueueNewJobs, getPendingJobs, updateJob } from './supabaseQueue.js';
 
 const config = getConfig();
+
+if (config.discoverySources.length) {
+  const discovered = await runScraper(config.discoverySources, config.discoveryTimeframe);
+  await enqueueNewJobs(config, discovered.map(({ url }) => url));
+  console.log(`Queued ${discovered.length} discovered link(s), ignoring existing rows`);
+} else {
+  console.log('No discovery sources configured; processing the existing Supabase queue');
+}
+
 const jobs = await getPendingJobs(config);
 
-console.log(`Found ${jobs.length} pending job link(s)`);
+console.log(`Found ${jobs.length} pending or retryable job link(s)`);
 
 let succeeded = 0;
 let failed = 0;
@@ -35,4 +45,3 @@ for (const job of jobs) {
 }
 
 console.log(`Finished: ${succeeded} succeeded, ${failed} failed`);
-if (failed > 0) process.exitCode = 1;

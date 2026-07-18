@@ -34,6 +34,26 @@ test('throws when no apply link exists', () => {
   );
 });
 
+test('prefers an external Click Here button over related Apply Now articles', () => {
+  const html = `
+    <a href="https://company.example/jobs/123">Click Here</a>
+    <a href="/another-job">Another company is hiring - Apply Now</a>
+  `;
+
+  assert.equal(
+    extractApplyUrl(html, 'https://jobssforu.in/source-job/'),
+    'https://company.example/jobs/123',
+  );
+});
+
+test('does not invent an Apply URL from unrelated external navigation', () => {
+  const html = '<a href="https://company.example/our-story">Our Story</a>';
+  assert.throws(
+    () => extractApplyUrl(html, 'https://careers.example/open-positions'),
+    /No Apply link/,
+  );
+});
+
 test('keeps the ATS job URL when Workday redirects to maintenance', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => ({

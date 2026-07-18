@@ -36,12 +36,18 @@ function linksFromHtml(html, pageUrl) {
 function scoreCandidate(candidate, sourceUrl) {
   const sourceHost = new URL(sourceUrl).hostname.replace(/^www\./, '');
   const targetHost = new URL(candidate.url).hostname.replace(/^www\./, '');
+  const isExternal = targetHost !== sourceHost;
   let score = 0;
 
   if (/^apply link$/i.test(candidate.text)) score += 100;
   else if (/^apply (?:now|here)$/i.test(candidate.text)) score += 80;
+  else if (isExternal && /^click here(?: to apply)?$/i.test(candidate.text)) score += 70;
   else if (APPLY_TEXT.test(candidate.text) && !EXCLUDED_TEXT.test(candidate.text)) score += 40;
-  if (targetHost !== sourceHost) score += 25;
+
+  // Domain or path shape alone is not evidence that a link is an Apply link.
+  if (score === 0) return 0;
+
+  if (isExternal) score += 25;
   if (/\/(?:job|jobs|career|careers|apply)\b/i.test(candidate.url)) score += 10;
   if (/facebook|twitter|whatsapp|telegram|linkedin/i.test(targetHost)) score -= 100;
 
