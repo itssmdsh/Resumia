@@ -1,0 +1,44 @@
+name: Daily job scraper
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4.1-mini' }}
+      AI_MAX_TOKENS: '3000'
+      WORKER_BATCH_LIMIT: '50'
+      HTTP_CONFIDENCE_THRESHOLD: '7'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start local AI parser
+        run: npm start > parser.log 2>&1 &
+      - name: Wait for local parser
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/health; then exit 0; fi
+            sleep 1
+          done
+          cat parser.log
+          exit 1
+      - name: Parse application links
+        env:
+          PARSER_API_URL: http://127.0.0.1:3000
+        run: npm run worker
+      - name: Show parser log on failure
+        if: failure()
+        run: cat parser.log || true
