@@ -1,0 +1,49 @@
+name: Extract job apply links
+
+on:
+  schedule:
+    # 03:30 UTC is 09:00 Asia/Kolkata (IST does not use daylight saving time).
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: job-link-automation
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: job-link-automation
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      DISCOVERY_SOURCES: ${{ vars.DISCOVERY_SOURCES || 'https://www.youtube.com/@OnlineStudy4u,https://www.youtube.com/@hiremeplz,https://www.youtube.com/channel/UCcyogDO_BD5HS7YlySkTELQ,https://jobcode.in/,https://telegram.me/PLACEMENTLELO,https://t.me/offcampussdrive,https://t.me/jobs_and_internships_updates' }}
+      DISCOVERY_TIMEFRAME: ${{ vars.DISCOVERY_TIMEFRAME || 'all' }}
+      BATCH_SIZE: "500"
+      PROCESS_CONCURRENCY: "5"
+      REQUEST_TIMEOUT_MS: "20000"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: job-link-automation/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Extract pending Apply URLs
+        run: npm start
