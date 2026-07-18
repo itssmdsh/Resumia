@@ -26,12 +26,16 @@ async function processOne({ db, queue, config, browser }) {
 export async function processQueue({ db, config, browser }) {
   const queue = await pendingJobs(db, config.batchLimit);
   const report = { requested: queue.length, completed: 0, failed: 0, http: 0, playwright: 0 };
-  log('batch_started', { queued: queue.length, limit: config.batchLimit });
-  for (const item of queue) {
-    const result = await processOne({ db, queue: item, config, browser });
-    report[result.status] += 1;
-    if (result.method) report[result.method] += 1;
-  }
+  log('batch_started', { queued: queue.length, limit: config.batchLimit, concurrency: config.concurrency });
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(config.concurrency, queue.length) }, async () => {
+    while (next < queue.length) {
+      const item = queue[next++];
+      const result = await processOne({ db, queue: item, config, browser });
+      report[result.status] += 1;
+      if (result.method) report[result.method] += 1;
+    }
+  }));
   log('batch_finished', report);
   return report;
 }

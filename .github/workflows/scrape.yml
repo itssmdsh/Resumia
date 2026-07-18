@@ -13,9 +13,13 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_API_KEY_1: ${{ secrets.OPENROUTER_API_KEY_1 }}
+      OPENROUTER_API_KEY_2: ${{ secrets.OPENROUTER_API_KEY_2 }}
+      OPENROUTER_API_KEY_3: ${{ secrets.OPENROUTER_API_KEY_3 }}
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4.1-mini' }}
-      AI_MAX_TOKENS: '3000'
+      AI_MAX_TOKENS: '1200'
       WORKER_BATCH_LIMIT: '50'
+      WORKER_CONCURRENCY: '3'
       HTTP_CONFIDENCE_THRESHOLD: '7'
     steps:
       - uses: actions/checkout@v4

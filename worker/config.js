@@ -11,6 +11,7 @@ export const config = {
   supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY,
   parserApiUrl: (process.env.PARSER_API_URL || process.env.OPENAI_ENDPOINT || '').replace(/\/$/, ''),
   batchLimit: integer('WORKER_BATCH_LIMIT', 50, 1, 100),
+  concurrency: integer('WORKER_CONCURRENCY', 3, 1, 5),
   httpThreshold: integer('HTTP_CONFIDENCE_THRESHOLD', 7, 1, 20),
 };
 
