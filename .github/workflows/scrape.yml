@@ -3,8 +3,6 @@ on:
   schedule:
     # 00:30 UTC = 06:00 Asia/Kolkata (IST).
     - cron: '30 0 * * *'
-    # One-time test: 12:00 UTC on 18 July = 17:30 IST on 18 July.
-    - cron: '0 12 18 7 *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,8 +20,8 @@ jobs:
       OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4.1-mini' }}
       AI_MAX_TOKENS: '1200'
-      WORKER_BATCH_LIMIT: '50'
-      WORKER_CONCURRENCY: '3'
+      WORKER_BATCH_LIMIT: ${{ vars.WORKER_BATCH_LIMIT || '50' }}
+      WORKER_CONCURRENCY: ${{ vars.WORKER_CONCURRENCY || '3' }}
       HTTP_CONFIDENCE_THRESHOLD: '7'
     steps:
       - uses: actions/checkout@v4

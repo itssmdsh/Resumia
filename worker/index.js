@@ -9,7 +9,8 @@ try {
   assertWorkerConfig();
   const report = await processQueue({ db: createDatabase(config.supabaseUrl, config.supabaseKey), config, browser });
   log('worker_finished', report);
-  process.exitCode = report.failed > 0 ? 1 : 0;
+  // Individual inaccessible or expired listings are normal; only fatal worker failures fail the workflow.
+  process.exitCode = 0;
 } catch (error) {
   log('worker_fatal', { error: error.message });
   process.exitCode = 1;

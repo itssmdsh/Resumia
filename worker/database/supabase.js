@@ -13,6 +13,12 @@ export async function updateQueue(db, id, update) {
   const { error } = await db.from('job_apply_links').update({ ...update, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error(`Unable to update application link ${id}: ${error.message}`);
 }
+export async function markDuplicateLinksComplete(db, queue) {
+  const { error } = await db.from('job_apply_links')
+    .update({ parsing_status: 'completed', parse_error: `Duplicate of ${queue.id}`, parsed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('apply_url', queue.apply_url).neq('id', queue.id).eq('parsing_status', 'pending');
+  if (error) throw new Error(`Unable to mark duplicate application links: ${error.message}`);
+}
 function commaSeparated(items) {
   return [...new Set((items || []).map((item) => item?.name || item?.text).filter(Boolean))].join(', ') || null;
 }
