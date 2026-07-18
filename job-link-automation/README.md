@@ -6,7 +6,7 @@ This folder is reserved for the automated workflow that:
    channels, and public Telegram channels;
 2. opens each job page and extracts the final **Apply** URL only;
 3. stores the result in Supabase;
-4. runs automatically every day at 09:00 Asia/Kolkata.
+4. runs automatically every day at 05:00 Asia/Kolkata.
 
 It is separate from the existing browser extension and API.
 
@@ -19,7 +19,7 @@ Please provide:
 - **Apply-link meaning:** confirmed as the final employer/ATS URL after redirects.
 - **Supabase project URL:** for example, `https://xxxxx.supabase.co`.
 - **Supabase server key:** preferably a dedicated `sb_secret_...` key. Do not commit it or paste it into source code.
-- **Schedule and timezone:** confirmed as `09:00` in `Asia/Kolkata`.
+- **Schedule and timezone:** confirmed as `05:00` in `Asia/Kolkata`.
 - **Hosting choice:** GitHub Actions, Supabase Edge Functions/Cron, or an always-on server. A local computer cannot run the schedule while it is switched off.
 - **Site constraints:** whether any target pages require login, CAPTCHA, JavaScript rendering, or cookie consent.
 
@@ -95,7 +95,7 @@ This requires Node.js 20.6 or newer.
 ## Daily schedule
 
 The repository workflow `.github/workflows/job-link-automation.yml` runs every
-day at 03:30 UTC, which is 09:00 Asia/Kolkata. Add `SUPABASE_URL` and
+day at 23:30 UTC, which is 05:00 Asia/Kolkata on the following day. Add `SUPABASE_URL` and
 `SUPABASE_SECRET_KEY` as GitHub repository Actions secrets before running it.
 The workflow can also be started manually from the GitHub Actions page. It
 processes up to 500 pending or retryable links per run using five concurrent

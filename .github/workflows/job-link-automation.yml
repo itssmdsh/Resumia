@@ -2,8 +2,8 @@ name: Extract job apply links
 
 on:
   schedule:
-    # 03:30 UTC is 09:00 Asia/Kolkata (IST does not use daylight saving time).
-    - cron: "30 3 * * *"
+    # 23:30 UTC is 05:00 Asia/Kolkata on the following day (IST has no DST).
+    - cron: "30 23 * * *"
   workflow_dispatch:
 
 permissions:
