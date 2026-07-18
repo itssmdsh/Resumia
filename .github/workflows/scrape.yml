@@ -3,6 +3,8 @@ on:
   schedule:
     # 00:30 UTC = 06:00 Asia/Kolkata (IST).
     - cron: '30 0 * * *'
+    # One-time test: 12:00 UTC on 18 July = 17:30 IST on 18 July.
+    - cron: '0 12 18 7 *'
   workflow_dispatch:
 permissions:
   contents: read
