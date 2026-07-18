@@ -1,4 +1,4 @@
-import { claimJob, finishAttempt, lifecycleSummary, markDuplicateLinksComplete, pendingJobs, recoverStaleProcessing, saveParsedJob, startAttempt, updateQueue } from '../database/supabase.js';
+import { claimJob, finishAttempt, lifecycleSummary, markDuplicateLinksComplete, pendingJobs, recoverStaleProcessing, requeueRetryableUnparsedLinks, saveParsedJob, startAttempt, updateQueue } from '../database/supabase.js';
 import { companyFromUrl } from '../database/jobRecord.js';
 import { parseJob } from '../ai/parser.js';
 import { retry } from '../utils/retry.js';
@@ -56,10 +56,11 @@ async function processOne({ db, queue, config, browser }) {
 
 export async function processQueue({ db, config, browser }) {
   const recovered = await recoverStaleProcessing(db);
+  const requeuedForRetry = await requeueRetryableUnparsedLinks(db, config.batchLimit);
   const queue = await pendingJobs(db, config.batchLimit);
   const uniqueQueue = [...new Map(queue.map((item) => [item.apply_url, item])).values()];
-  const report = { fetched: queue.length, requested: uniqueQueue.length, duplicates: queue.length - uniqueQueue.length, completed: 0, failed: 0, expired: 0, skipped: 0, httpSuccess: 0, playwrightSuccess: 0, aiSuccess: 0, httpFailures: 0, playwrightFailures: 0, parserFailures: 0, timeouts: 0, accessBlocked: 0, recoveredStale: recovered, startedAt: Date.now() };
-  log('batch_started', { queued: uniqueQueue.length, fetched: queue.length, limit: config.batchLimit, concurrency: config.concurrency, recoveredStale: recovered });
+  const report = { fetched: queue.length, requested: uniqueQueue.length, duplicates: queue.length - uniqueQueue.length, completed: 0, failed: 0, expired: 0, skipped: 0, httpSuccess: 0, playwrightSuccess: 0, aiSuccess: 0, httpFailures: 0, playwrightFailures: 0, parserFailures: 0, timeouts: 0, accessBlocked: 0, recoveredStale: recovered, requeuedForRetry, startedAt: Date.now() };
+  log('batch_started', { queued: uniqueQueue.length, fetched: queue.length, limit: config.batchLimit, concurrency: config.concurrency, recoveredStale: recovered, requeuedForRetry });
   let next = 0;
   await Promise.all(Array.from({ length: Math.min(config.concurrency, uniqueQueue.length) }, async () => {
     while (next < uniqueQueue.length) {

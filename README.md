@@ -26,9 +26,11 @@ Run [`003_create_parsed_job_details.sql`](C:/Users/hones/Documents/WebScraper/jo
 
 Also run [`005_add_parsing_audit_lifecycle.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/005_add_parsing_audit_lifecycle.sql). It creates `job_parsing_attempts`, which retains the extraction method, raw text sent to AI, AI response where available, error, stack trace, HTTP status, timing, and retry count for every attempt. It also adds explicit `expired` and `skipped` lifecycle states and atomic queue claiming.
 
+Run [`006_retry_unparsed_links_once.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/006_retry_unparsed_links_once.sql) next. It gives every successful application link with no `parsed_job_details` record one additional attempt, up to 500 per run. After two failed attempts, a link remains in its terminal lifecycle state with complete audit history instead of retrying forever.
+
 The [`scrape.yml`](C:/Users/hones/Documents/WebScraper/.github/workflows/scrape.yml) workflow runs every day at 06:00 IST, processes at most 50 pending application links with three workers, uses HTTP extraction before Playwright, starts the AI parser locally on the GitHub runner, and writes company, location, comma-separated skills, and the full JSON. Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENROUTER_API_KEYS` as GitHub secrets. `OPENROUTER_API_KEYS` accepts a comma- or newline-separated unlimited list. Manual runs always execute immediately.
 
-Set optional GitHub Actions variables `WORKER_BATCH_LIMIT` (1–500, default 50) and `WORKER_CONCURRENCY` (1–5, default 3) to adjust throughput without editing code. Per-link failures such as removed or bot-protected listings are recorded in Supabase but no longer fail the entire workflow.
+Set optional GitHub Actions variables `WORKER_BATCH_LIMIT` (1–500, default 500) and `WORKER_CONCURRENCY` (1–5, default 5) to adjust throughput without editing code. Per-link failures such as removed or bot-protected listings are recorded in Supabase but no longer fail the entire workflow.
 
 ## Output and forwarding
 

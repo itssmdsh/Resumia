@@ -15,6 +15,11 @@ export async function recoverStaleProcessing(db) {
   if (error) throw new Error(`Unable to recover stale processing links: ${error.message}`);
   return data || 0;
 }
+export async function requeueRetryableUnparsedLinks(db, limit) {
+  const { data, error } = await db.rpc('requeue_retryable_unparsed_links', { p_limit: limit });
+  if (error) throw new Error(`Unable to requeue retryable links: ${error.message}`);
+  return data || 0;
+}
 export async function claimJob(db, id) {
   const { data, error } = await db.rpc('claim_job_apply_link', { p_link_id: id });
   if (error) throw new Error(`Unable to claim application link ${id}: ${error.message}`);

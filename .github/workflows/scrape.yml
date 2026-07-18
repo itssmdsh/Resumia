@@ -9,7 +9,7 @@ permissions:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 110
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -21,8 +21,8 @@ jobs:
       OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4.1-mini' }}
       AI_MAX_TOKENS: '1200'
       PARSER_AUDIT_MODE: 'true'
-      WORKER_BATCH_LIMIT: ${{ vars.WORKER_BATCH_LIMIT || '50' }}
-      WORKER_CONCURRENCY: ${{ vars.WORKER_CONCURRENCY || '3' }}
+      WORKER_BATCH_LIMIT: ${{ vars.WORKER_BATCH_LIMIT || '500' }}
+      WORKER_CONCURRENCY: ${{ vars.WORKER_CONCURRENCY || '5' }}
       HTTP_CONFIDENCE_THRESHOLD: '7'
     steps:
       - uses: actions/checkout@v4
