@@ -20,11 +20,11 @@ The API is available at `http://localhost:3000/api/extract` and has a health che
 
 For production, serve the API over HTTPS and set `ALLOWED_EXTENSION_ORIGINS` to the installed extension origin, such as `chrome-extension://abcdefghijklmnopqrstuvwxyz`.
 
-## Daily Supabase scraping worker
+## Daily apply-link parsing worker
 
-Run [`supabase/schema.sql`](C:/Users/hones/Documents/WebScraper/supabase/schema.sql) in Supabase SQL Editor, then add pending URLs to `job_queue`. Configure `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `PARSER_API_URL` (a deployed HTTPS URL for this API) in your environment and run `npm run worker`.
+Run [`003_create_parsed_job_details.sql`](C:/Users/hones/Documents/WebScraper/job-link-automation/supabase/migrations/003_create_parsed_job_details.sql) after the two existing `job-link-automation` migrations in Supabase SQL Editor. The worker reads only rows where `job_apply_links.apply_url` exists and extraction succeeded, then writes one record per link to `parsed_job_details`.
 
-The [`scrape.yml`](C:/Users/hones/Documents/WebScraper/.github/workflows/scrape.yml) workflow runs daily at 09:00 UTC, processes at most 50 pending URLs, uses HTTP extraction before Playwright, and persists the full parsed JSON in `parsed_jobs`. Add the same three values as GitHub Actions secrets before enabling the scheduled workflow.
+The [`scrape.yml`](C:/Users/hones/Documents/WebScraper/.github/workflows/scrape.yml) workflow runs daily at 09:00 UTC, processes at most 50 pending application links, uses HTTP extraction before Playwright, and writes company, location, comma-separated skills, and the full JSON. Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `PARSER_API_URL` as GitHub Actions secrets before enabling it.
 
 ## Output and forwarding
 
