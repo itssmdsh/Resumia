@@ -23,7 +23,7 @@ async function supabaseRequest(config, path, options = {}) {
 export async function getPendingJobs(config) {
   const query = new URLSearchParams({
     select: 'id,source_url',
-    extraction_status: 'in.(pending,failed)',
+    extraction_status: 'eq.pending',
     order: 'created_at.asc',
     limit: String(config.batchSize),
   });
@@ -74,5 +74,44 @@ export async function enqueueNewJobs(config, sourceUrls) {
       prefer: 'resolution=ignore-duplicates,return=minimal',
     },
     body: JSON.stringify(sourceUrls.map((sourceUrl) => ({ source_url: sourceUrl }))),
+  });
+}
+
+export async function getFailedJobs(config) {
+  const query = new URLSearchParams({
+    select: 'source_url',
+    order: 'last_failed_at.asc',
+    limit: String(config.batchSize),
+  });
+  const response = await supabaseRequest(config, `job_apply_link_failures?${query}`);
+  return response.json();
+}
+
+export async function deleteFailure(config, sourceUrl) {
+  await supabaseRequest(
+    config,
+    `job_apply_link_failures?source_url=eq.${encodeURIComponent(sourceUrl)}`,
+    { method: 'DELETE' },
+  );
+}
+
+export async function moveJobToFailures(config, job, errorMessage) {
+  const now = new Date().toISOString();
+  await supabaseRequest(config, 'job_apply_link_failures?on_conflict=source_url', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify({
+      source_url: job.source_url,
+      error_message: errorMessage,
+      last_failed_at: now,
+      updated_at: now,
+    }),
+  });
+
+  await supabaseRequest(config, `job_apply_links?id=eq.${encodeURIComponent(job.id)}`, {
+    method: 'DELETE',
   });
 }

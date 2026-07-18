@@ -62,9 +62,10 @@ are the three configured YouTube channels, Jobcode, and the three configured
 public Telegram channels. Newly discovered URLs are inserted into
 `public.job_apply_links` as `pending`; existing rows are left unchanged so
 successful jobs are not processed repeatedly. The run then extracts and resolves
-the final Apply URL and updates each new row to `success` or `failed`. Failed rows
-are retried on later daily runs so temporary network or source-site errors can
-recover automatically.
+the final Apply URL. Successful rows remain in `job_apply_links`. Failed rows move
+to `job_apply_link_failures` and are retried on later daily runs so temporary
+network or source-site errors can recover automatically. A successful retry
+removes its failure record and restores the source to the main table.
 
 `DISCOVERY_SOURCES` accepts comma-separated or newline-separated website URLs,
 YouTube channel URLs/handles, and public Telegram channel URLs. You can override
