@@ -7,7 +7,14 @@ import {
   isUnhelpfulDestination,
   resolveRedirects,
 } from './extractApplyUrl.js';
-import { enqueueNewJobs, getPendingJobs, updateJob } from './supabaseQueue.js';
+import {
+  deleteFailure,
+  enqueueNewJobs,
+  getFailedJobs,
+  getPendingJobs,
+  moveJobToFailures,
+  updateJob,
+} from './supabaseQueue.js';
 
 const config = getConfig();
 
@@ -19,9 +26,13 @@ if (config.discoverySources.length) {
   console.log('No discovery sources configured; processing the existing Supabase queue');
 }
 
+const failedJobs = await getFailedJobs(config);
+await enqueueNewJobs(config, failedJobs.map(({ source_url: sourceUrl }) => sourceUrl));
+console.log(`Requeued ${failedJobs.length} failed link(s) for retry`);
+
 const jobs = await getPendingJobs(config);
 
-console.log(`Found ${jobs.length} pending or retryable job link(s)`);
+console.log(`Found ${jobs.length} pending job link(s)`);
 
 let succeeded = 0;
 let failed = 0;
@@ -51,15 +62,13 @@ async function processNextJobs() {
         extraction_status: 'success',
         error_message: null,
       });
+      await deleteFailure(config, job.source_url);
       succeeded += 1;
       console.log(`Success: ${job.source_url} -> ${finalApplyUrl}`);
     } catch (error) {
       failed += 1;
       const message = error instanceof Error ? error.message : String(error);
-      await updateJob(config, job.id, {
-        extraction_status: 'failed',
-        error_message: message.slice(0, 1_000),
-      });
+      await moveJobToFailures(config, job, message.slice(0, 1_000));
       console.error(`Failed: ${job.source_url}: ${message}`);
     }
   }
