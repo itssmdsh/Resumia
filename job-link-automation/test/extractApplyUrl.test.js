@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { extractApplyUrl, resolveRedirects } from '../src/extractApplyUrl.js';
+import {
+  extractApplyUrl,
+  isLikelyDirectApplicationUrl,
+  isUnhelpfulDestination,
+  resolveRedirects,
+} from '../src/extractApplyUrl.js';
 
 test('extracts Jobcode Apply Link and resolves HTML entities', () => {
   const html = `
@@ -52,6 +57,36 @@ test('does not invent an Apply URL from unrelated external navigation', () => {
     () => extractApplyUrl(html, 'https://careers.example/open-positions'),
     /No Apply link/,
   );
+});
+
+test('recognizes direct ATS job URLs but not aggregator articles or listings', () => {
+  assert.equal(
+    isLikelyDirectApplicationUrl('https://company.wd5.myworkdayjobs.com/site/job/city/role_123'),
+    true,
+  );
+  assert.equal(
+    isLikelyDirectApplicationUrl('https://jobcode.in/company-hiring-apply-now/'),
+    false,
+  );
+  assert.equal(
+    isLikelyDirectApplicationUrl('https://fullcreative.recruitee.com/open-positions'),
+    false,
+  );
+});
+
+test('rejects social, error, and generic career destinations', () => {
+  assert.equal(isUnhelpfulDestination('https://t.me/jobs_channel'), true);
+  assert.equal(isUnhelpfulDestination('https://instagram.com/jobs_channel'), true);
+  assert.equal(isUnhelpfulDestination('https://company.example/careers/Error'), true);
+  assert.equal(isUnhelpfulDestination('https://company.example/careers'), true);
+  assert.equal(
+    isUnhelpfulDestination(
+      'https://onlinestudy4u.in/another-job/',
+      'https://onlinestudy4u.in/source-job/',
+    ),
+    true,
+  );
+  assert.equal(isUnhelpfulDestination('https://company.example/jobs/123'), false);
 });
 
 test('keeps the ATS job URL when Workday redirects to maintenance', async () => {

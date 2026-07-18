@@ -69,8 +69,9 @@ recover automatically.
 `DISCOVERY_SOURCES` accepts comma-separated or newline-separated website URLs,
 YouTube channel URLs/handles, and public Telegram channel URLs. You can override
 the default in GitHub under **Settings → Secrets and variables → Actions →
-Variables**. `DISCOVERY_TIMEFRAME` defaults to `24h` for YouTube and Telegram
-posts. Generic website discovery scans the configured page on every run.
+Variables**. `DISCOVERY_TIMEFRAME` defaults to `all`, so every item currently
+available through YouTube RSS and Telegram's public preview is scanned. Generic
+website discovery scans the configured page on every run.
 
 Links can still be added manually by inserting only `source_url`, or with:
 
@@ -95,4 +96,6 @@ This requires Node.js 20.6 or newer.
 The repository workflow `.github/workflows/job-link-automation.yml` runs every
 day at 03:30 UTC, which is 09:00 Asia/Kolkata. Add `SUPABASE_URL` and
 `SUPABASE_SECRET_KEY` as GitHub repository Actions secrets before running it.
-The workflow can also be started manually from the GitHub Actions page.
+The workflow can also be started manually from the GitHub Actions page. It
+processes up to 500 pending or retryable links per run using five concurrent
+workers.

@@ -42,16 +42,78 @@ function scoreCandidate(candidate, sourceUrl) {
   if (/^apply link$/i.test(candidate.text)) score += 100;
   else if (/^apply (?:now|here)$/i.test(candidate.text)) score += 80;
   else if (isExternal && /^click here(?: to apply)?$/i.test(candidate.text)) score += 70;
-  else if (APPLY_TEXT.test(candidate.text) && !EXCLUDED_TEXT.test(candidate.text)) score += 40;
+  else if (
+    APPLY_TEXT.test(candidate.text)
+    && !EXCLUDED_TEXT.test(candidate.text)
+    && (isExternal || candidate.text.length <= 30)
+  ) score += 40;
 
   // Domain or path shape alone is not evidence that a link is an Apply link.
   if (score === 0) return 0;
 
   if (isExternal) score += 25;
   if (/\/(?:job|jobs|career|careers|apply)\b/i.test(candidate.url)) score += 10;
-  if (/facebook|twitter|whatsapp|telegram|linkedin/i.test(targetHost)) score -= 100;
+  if (/facebook|twitter|whatsapp|telegram|linkedin|(?:^|\.)t\.me$/i.test(targetHost)) score -= 100;
 
   return score;
+}
+
+const INTERMEDIARY_HOSTS = [
+  'jobcode.in',
+  'jobssforu.in',
+  'onlinestudy4u.in',
+  'trackutech.com',
+  'newoffcampusjobs.com',
+  'tinyurl.com',
+  'bit.ly',
+  'forbes.com',
+];
+
+export function isLikelyDirectApplicationUrl(value) {
+  const url = new URL(value);
+  const host = url.hostname.replace(/^www\./, '').toLowerCase();
+  const path = url.pathname.toLowerCase();
+
+  if (INTERMEDIARY_HOSTS.some((domain) => host === domain || host.endsWith(`.${domain}`))) {
+    return false;
+  }
+  if (/recruitee\.com$/.test(host) && /\/open-positions?\/?$/.test(path)) return false;
+
+  const directHost =
+    /(?:myworkdayjobs|greenhouse|lever|smartrecruiters|amazon\.jobs|ultipro|brassring|csod|oraclecloud|zoho|dayforce|naukri|joinsuperset|testedrecruits|myanatomy|tcsion)\./i.test(host)
+    || /^(?:jobs?|careers?|apply)\./i.test(host);
+  const directPath =
+    /\/(?:jobs?|jobdetail|opportunitydetail|requisition|posting|applications\/jobs|candidateexperience|careers\/job)\b/i.test(path)
+    || /\/careers\/[^/]+\/[^/]+/i.test(path);
+
+  return directHost || directPath || (
+    host === 'docs.google.com'
+    && path.includes('/forms/')
+  ) || host === 'surveys.infosysapps.com';
+}
+
+export function isUnhelpfulDestination(value, sourceValue) {
+  const url = new URL(value);
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname.replace(/\/+$/, '').toLowerCase() || '/';
+  const sourceHost = sourceValue
+    ? new URL(sourceValue).hostname.replace(/^www\./, '').toLowerCase()
+    : null;
+  const normalizedHost = host.replace(/^www\./, '');
+  const isRelatedIntermediaryArticle =
+    sourceHost === normalizedHost
+    && INTERMEDIARY_HOSTS.some(
+      (domain) => normalizedHost === domain || normalizedHost.endsWith(`.${domain}`),
+    );
+
+  return /facebook|twitter|instagram|whatsapp|telegram|linkedin|(?:^|\.)t\.me$/i.test(host)
+    || /(?:^|\/)(?:error|errors|maintenance|service-unavailable)(?:\/|$)/i.test(path)
+    || /\/(?:careers|jobs|jobsearch|open-positions|join)$/.test(path)
+    || /\/closedform$/.test(path)
+    || /\.pdf$/i.test(path)
+    || url.searchParams.get('error') === 'true'
+    || path === '/'
+    || isRelatedIntermediaryArticle;
 }
 
 export function extractApplyUrl(html, sourceUrl) {
