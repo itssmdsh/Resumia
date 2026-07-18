@@ -20,6 +20,12 @@ The API is available at `http://localhost:3000/api/extract` and has a health che
 
 For production, serve the API over HTTPS and set `ALLOWED_EXTENSION_ORIGINS` to the installed extension origin, such as `chrome-extension://abcdefghijklmnopqrstuvwxyz`.
 
+## Daily Supabase scraping worker
+
+Run [`supabase/schema.sql`](C:/Users/hones/Documents/WebScraper/supabase/schema.sql) in Supabase SQL Editor, then add pending URLs to `job_queue`. Configure `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `PARSER_API_URL` (a deployed HTTPS URL for this API) in your environment and run `npm run worker`.
+
+The [`scrape.yml`](C:/Users/hones/Documents/WebScraper/.github/workflows/scrape.yml) workflow runs daily at 09:00 UTC, processes at most 50 pending URLs, uses HTTP extraction before Playwright, and persists the full parsed JSON in `parsed_jobs`. Add the same three values as GitHub Actions secrets before enabling the scheduled workflow.
+
 ## Output and forwarding
 
 The popup can copy or download the result. Enter an optional teammate endpoint to forward the validated job JSON via `POST`; the extension attaches no credentials, so use a secure endpoint appropriate to your environment.
