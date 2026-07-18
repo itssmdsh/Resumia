@@ -1,9 +1,11 @@
 import { getConfig } from './config.js';
 import { runScraper } from './discoveryScraper.js';
 import {
+  canonicalizeKnownApplicationUrl,
   extractApplyUrl,
   fetchHtml,
   isLikelyDirectApplicationUrl,
+  isShortenedUrl,
   isUnhelpfulDestination,
   resolveRedirects,
 } from './extractApplyUrl.js';
@@ -45,12 +47,22 @@ async function processNextJobs() {
 
     try {
       let finalApplyUrl;
-      if (isLikelyDirectApplicationUrl(job.source_url)) {
-        finalApplyUrl = await resolveRedirects(job.source_url, config.requestTimeoutMs);
+      const normalizedSourceUrl = canonicalizeKnownApplicationUrl(job.source_url);
+
+      if (isLikelyDirectApplicationUrl(normalizedSourceUrl)) {
+        finalApplyUrl = await resolveRedirects(normalizedSourceUrl, config.requestTimeoutMs);
       } else {
-        const html = await fetchHtml(job.source_url, config.requestTimeoutMs);
-        const applyUrl = extractApplyUrl(html, job.source_url);
-        finalApplyUrl = await resolveRedirects(applyUrl, config.requestTimeoutMs);
+        const sourceUrl = isShortenedUrl(normalizedSourceUrl)
+          ? await resolveRedirects(normalizedSourceUrl, config.requestTimeoutMs)
+          : normalizedSourceUrl;
+
+        if (isLikelyDirectApplicationUrl(sourceUrl)) {
+          finalApplyUrl = sourceUrl;
+        } else {
+          const html = await fetchHtml(sourceUrl, config.requestTimeoutMs);
+          const applyUrl = extractApplyUrl(html, sourceUrl);
+          finalApplyUrl = await resolveRedirects(applyUrl, config.requestTimeoutMs);
+        }
       }
 
       if (isUnhelpfulDestination(finalApplyUrl, job.source_url)) {
