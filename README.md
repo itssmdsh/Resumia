@@ -4,7 +4,7 @@ A Manifest V3 Chrome extension and Express API that turn job-posting pages into 
 
 ## Run the backend
 
-1. Install Node.js 20+.
+1. Install Node.js 22+.
 2. Run `npm install`.
 3. Copy `.env.example` to `.env`, then set either `OPENAI_API_KEY` or `OPENROUTER_API_KEY` (and its matching model variable).
 4. Run `npm start`.
